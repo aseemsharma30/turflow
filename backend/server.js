@@ -82,6 +82,7 @@ const venueFromRow = (row) => ({
   id: Number(row.id),
   name: row.name,
   location: row.location,
+  city: row.city || '',
   description: row.description || '',
   price: String(Number(row.price || 0)),
   rating: Number(row.rating || 0),
@@ -123,6 +124,7 @@ const createTables = async () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       location TEXT NOT NULL,
+      city VARCHAR(100) NOT NULL DEFAULT '',
       description TEXT NULL,
       price DECIMAL(10,2) NOT NULL DEFAULT 0,
       rating DECIMAL(2,1) NOT NULL DEFAULT 0,
@@ -239,6 +241,10 @@ app.get('/api/health', async (req, res) => {
 app.post('/api/setup', async (req, res) => {
   try {
     await createTables();
+    // Migrate existing tables: add city column if missing
+    await pool.execute(`
+      ALTER TABLE venues ADD COLUMN IF NOT EXISTS city VARCHAR(100) NOT NULL DEFAULT ''
+    `).catch(() => {}); // ignore if already exists or DB doesn't support IF NOT EXISTS
     await seedData();
     res.json({ success: true, message: 'Local TurFlow database is ready.' });
   } catch (error) {
@@ -286,11 +292,12 @@ app.post('/api/venues.php', requireAdmin, async (req, res) => {
   const venue = req.body;
   const [result] = await pool.execute(
     `INSERT INTO venues
-      (name, location, description, price, rating, sports, image, gallery, badge, is_featured)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (name, location, city, description, price, rating, sports, image, gallery, badge, is_featured)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       venue.name || '',
       venue.location || '',
+      venue.city || '',
       venue.description || '',
       Number(venue.price || 0),
       Number(venue.rating || 0),
@@ -309,12 +316,13 @@ app.patch('/api/venues.php', requireAdmin, async (req, res) => {
   const venue = req.body;
   await pool.execute(
     `UPDATE venues
-      SET name = ?, location = ?, description = ?, price = ?, rating = ?,
+      SET name = ?, location = ?, city = ?, description = ?, price = ?, rating = ?,
           sports = ?, image = ?, gallery = ?, badge = ?, is_featured = ?
       WHERE id = ?`,
     [
       venue.name || '',
       venue.location || '',
+      venue.city || '',
       venue.description || '',
       Number(venue.price || 0),
       Number(venue.rating || 0),

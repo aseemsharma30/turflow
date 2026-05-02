@@ -6,6 +6,7 @@ import './AdminPanel.css';
 const emptyForm = {
   name: '',
   location: '',
+  city: '',
   description: '',
   price: '',
   rating: '',
@@ -18,7 +19,7 @@ const emptyForm = {
 
 function AdminPanel() {
   const {
-    venues,
+    allVenues: venues,
     bookings,
     addVenue,
     updateVenue,
@@ -34,11 +35,12 @@ function AdminPanel() {
   const [formData, setFormData] = useState(emptyForm);
 
   const sportOptions = ['Cricket', 'Football', 'Pickleball'];
-  const bookingStatuses = ['New', 'Contacted', 'Confirmed', 'Cancelled'];
+  const bookingStatuses = ['New', 'Confirmed', 'Cancelled'];
   const filteredBookings = bookingFilter === 'All'
     ? bookings
     : bookings.filter(booking => booking.status === bookingFilter);
-  const totalBookingValue = bookings.reduce((total, booking) => total + Number(booking.amount || 0), 0);
+  const totalRevenue = bookings.reduce((total, booking) => total + Number(booking.amount || 0), 0);
+  const totalPendingBookings = bookings.filter(booking => booking.status === 'New').length;
 
   const handleInputChange = (e) => {
     const { checked, name, type, value } = e.target;
@@ -105,6 +107,7 @@ function AdminPanel() {
       ...formData,
       name: formData.name.trim(),
       location: formData.location.trim(),
+      city: formData.city.trim(),
       description: formData.description.trim(),
       price: String(formData.price),
       rating: Number(formData.rating),
@@ -132,6 +135,7 @@ function AdminPanel() {
     setFormData({
       ...emptyForm,
       ...venue,
+      city: venue.city || '',
       rating: String(venue.rating || ''),
       gallery: venue.gallery || []
     });
@@ -225,6 +229,18 @@ function AdminPanel() {
                   value={formData.location}
                   onChange={handleInputChange}
                   placeholder="Full address with sector and city"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>City *</label>
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Lucknow, Delhi, Mumbai"
                   required
                 />
               </div>
@@ -464,12 +480,16 @@ function AdminPanel() {
               <strong>{bookings.length}</strong>
             </div>
             <div className="booking-stat">
+              <span>Total Pending</span>
+              <strong>{totalPendingBookings}</strong>
+            </div>
+            <div className="booking-stat">
               <span>New Requests</span>
               <strong>{bookings.filter(booking => booking.status === 'New').length}</strong>
             </div>
             <div className="booking-stat">
-              <span>Total Value</span>
-              <strong>₹{totalBookingValue}</strong>
+              <span>Total Revenue</span>
+              <strong>₹{totalRevenue}</strong>
             </div>
           </div>
 

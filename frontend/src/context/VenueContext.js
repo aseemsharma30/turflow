@@ -21,6 +21,11 @@ const normalizeVenue = (venue) => ({
 export const VenueProvider = ({ children }) => {
   const [venues, setVenues] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredVenues = searchQuery.trim()
+    ? venues.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : venues;
 
   // ─── Venues ────────────────────────────────────────────────────────────────
 
@@ -180,8 +185,10 @@ export const VenueProvider = ({ children }) => {
 
   const value = {
     // Venues
-    venues,
+    venues: filteredVenues,
+    allVenues: venues,
     setVenues,
+    setSearchQuery,
     addVenue,
     updateVenue,
     deleteVenue,
