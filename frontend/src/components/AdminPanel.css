@@ -361,6 +361,7 @@ thead {
 th {
   padding: 16px;
   text-align: left;
+  vertical-align: middle;
   font-size: 13px;
   font-weight: 700;
   color: #22c55e;
@@ -373,6 +374,7 @@ td {
   font-size: 14px;
   color: #ffffff;
   border-bottom: 1px solid rgba(42, 74, 47, 0.5);
+  vertical-align: middle;
 }
 
 tbody tr:hover {
@@ -418,9 +420,6 @@ tbody tr:last-child td {
 
 .venue-sports {
   font-size: 13px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
 }
 
 .badge-tag {
@@ -438,7 +437,6 @@ tbody tr:last-child td {
 }
 
 .actions {
-  display: flex;
   gap: 8px;
 }
 

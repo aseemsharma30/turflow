@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { FiEdit2, FiImage, FiMessageCircle, FiPlus, FiTrash2, FiUpload, FiX } from 'react-icons/fi';
+import React, { useState, useContext, useEffect } from 'react';
+import { FiEdit2, FiImage, FiPlus, FiTrash2, FiUpload, FiX } from 'react-icons/fi';
 import { VenueContext } from '../context/VenueContext';
 import './AdminPanel.css';
 
@@ -28,7 +28,7 @@ function AdminPanel() {
     deleteBooking,
     refreshBookings
   } = useContext(VenueContext);
-  const [activeAdminTab, setActiveAdminTab] = useState('venues');
+  const [activeAdminTab, setActiveAdminTab] = useState('bookings');
   const [bookingFilter, setBookingFilter] = useState('All');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -39,6 +39,8 @@ function AdminPanel() {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
   };
+
+  useEffect(() => { refreshBookings(); }, []);
 
   const sportOptions = ['Cricket', 'Football', 'Pickleball'];
   const bookingStatuses = ['New', 'Confirmed', 'Cancelled'];
@@ -189,12 +191,6 @@ function AdminPanel() {
 
       <div className="admin-tabs">
         <button
-          className={activeAdminTab === 'venues' ? 'active' : ''}
-          onClick={() => setActiveAdminTab('venues')}
-        >
-          Venues
-        </button>
-        <button
           className={activeAdminTab === 'bookings' ? 'active' : ''}
           onClick={() => {
             setActiveAdminTab('bookings');
@@ -202,7 +198,12 @@ function AdminPanel() {
           }}
         >
           Bookings
-          <span>{bookings.length}</span>
+        </button>
+        <button
+          className={activeAdminTab === 'venues' ? 'active' : ''}
+          onClick={() => setActiveAdminTab('venues')}
+        >
+          Venues
         </button>
       </div>
 
@@ -412,16 +413,11 @@ function AdminPanel() {
                 <th>Photo</th>
                 <th>Name</th>
                 <th>Location</th>
-                <th>Price</th>
-                <th>Rating</th>
-                <th>Sports</th>
-                <th>Badge</th>
-                <th>Featured</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {venues.map(venue => (
+              {[...venues].sort((a, b) => a.id - b.id).map(venue => (
                 <tr key={venue.id}>
                   <td>#{venue.id}</td>
                   <td>
@@ -429,38 +425,11 @@ function AdminPanel() {
                   </td>
                   <td className="venue-name">{venue.name}</td>
                   <td className="venue-location">{venue.location}</td>
-                  <td className="venue-price">₹{venue.price}/hr</td>
-                  <td className="venue-rating">★ {venue.rating}</td>
-                  <td className="venue-sports">
-                    {venue.sports.join(', ')}
-                  </td>
-                  <td className="venue-badge">
-                    {venue.badge ? (
-                      <span className="badge-tag">{venue.badge}</span>
-                    ) : (
-                      <span className="badge-none">-</span>
-                    )}
-                  </td>
-                  <td>
-                    {venue.isFeatured ? (
-                      <span className="badge-tag">Yes</span>
-                    ) : (
-                      <span className="badge-none">No</span>
-                    )}
-                  </td>
                   <td className="actions">
-                    <button
-                      className="edit-btn"
-                      onClick={() => handleEdit(venue)}
-                      title="Edit"
-                    >
+                    <button className="edit-btn" onClick={() => handleEdit(venue)} title="Edit">
                       <FiEdit2 />
                     </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(venue.id)}
-                      title="Delete"
-                    >
+                    <button className="delete-btn" onClick={() => handleDelete(venue.id)} title="Delete">
                       <FiTrash2 />
                     </button>
                   </td>
@@ -484,10 +453,6 @@ function AdminPanel() {
             <div className="booking-stat">
               <span>Total Bookings</span>
               <strong>{bookings.length}</strong>
-            </div>
-            <div className="booking-stat">
-              <span>Total Pending</span>
-              <strong>{totalPendingBookings}</strong>
             </div>
             <div className="booking-stat">
               <span>New Requests</span>
@@ -567,10 +532,6 @@ function AdminPanel() {
                         <option value={status} key={status}>{status}</option>
                       ))}
                     </select>
-                    <a href={getBookingWhatsappUrl(booking)} target="_blank" rel="noreferrer">
-                      <FiMessageCircle />
-                      WhatsApp
-                    </a>
                     <button
                       className="delete-booking-btn"
                       onClick={() => handleDeleteBooking(booking.id)}
