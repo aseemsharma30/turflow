@@ -6,9 +6,9 @@ function Header({ location }) {
   return (
     <header className="header">
       <div className="header-left">
-        <h1 className="logo">
-          Tur<span className="logo-green">Flow</span>
-        </h1>
+        <span style={{fontFamily:'"Arial Black",Impact,sans-serif',fontStyle:'italic',fontWeight:900,fontSize:'28px',letterSpacing:'-0.5px',lineHeight:1,userSelect:'none'}}>
+          <span style={{color:'#fff'}}>Tur</span><span style={{color:'#20c05c'}}>Flow</span>
+        </span>
       </div>
 
       <div className="header-right">

@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
-import { VenueProvider, VenueContext } from './context/VenueContext';
+import { VenueProvider } from './context/VenueContext';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import OfferBanner from './components/OfferBanner';
@@ -14,17 +14,9 @@ import BookingPage from './components/BookingPage';
 import BookingDetailsPage from './components/BookingDetailsPage';
 import { apiUrl, getAuthHeaders } from './apiConfig';
 
-function HeaderWithContext() {
-  const { selectedLocation, setSelectedLocation } = useContext(VenueContext);
-  return <Header location={selectedLocation || 'All Cities'} setLocation={setSelectedLocation} />;
-}
-
-function SportsSelectorWithContext() {
-  const { selectedSport, setSelectedSport } = useContext(VenueContext);
-  return <SportsSelector selectedSport={selectedSport} setSelectedSport={setSelectedSport} />;
-}
-
 function App() {
+  const [selectedSport, setSelectedSport] = useState('cricket');
+  const [selectedLocation, setSelectedLocation] = useState('Lucknow');
   const [path, setPath] = useState(window.location.pathname);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(isAdminAuthenticated);
 
@@ -93,7 +85,9 @@ function App() {
             <>
               <div className="admin-header-bar">
                 <div className="admin-header-content">
-                  <h1>TurFlow Admin</h1>
+                  <span style={{fontFamily:'"Arial Black",Impact,sans-serif',fontStyle:'italic',fontWeight:900,fontSize:'28px',letterSpacing:'-0.5px',lineHeight:1,userSelect:'none'}}>
+                    <span style={{color:'#fff'}}>Tur</span><span style={{color:'#20c05c'}}>Flow</span>
+                  </span>
                   <div className="admin-header-actions">
                     <button
                       className="back-to-home-btn"
@@ -128,10 +122,10 @@ function App() {
           />
         ) : (
           <>
-            <HeaderWithContext />
+            <Header location={selectedLocation} setLocation={setSelectedLocation} />
             <SearchBar />
             <OfferBanner />
-            <SportsSelectorWithContext />
+            <SportsSelector selectedSport={selectedSport} setSelectedSport={setSelectedSport} />
             <FeaturedVenues onBookVenue={openBookingPage} />
             <VenuesList onBookVenue={openBookingPage} />
             <BottomNavigation />
