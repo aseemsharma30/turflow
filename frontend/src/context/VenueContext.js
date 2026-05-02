@@ -22,10 +22,15 @@ export const VenueProvider = ({ children }) => {
   const [venues, setVenues] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSport, setSelectedSport] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('Lucknow');
 
-  const filteredVenues = searchQuery.trim()
-    ? venues.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : venues;
+  const filteredVenues = venues.filter(v => {
+    if (searchQuery.trim() && !v.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (selectedSport && !v.sports.some(s => s.toLowerCase() === selectedSport.toLowerCase())) return false;
+    if (selectedLocation && !(v.city || '').toLowerCase().includes(selectedLocation.toLowerCase())) return false;
+    return true;
+  });
 
   // ─── Venues ────────────────────────────────────────────────────────────────
 
@@ -189,6 +194,10 @@ export const VenueProvider = ({ children }) => {
     allVenues: venues,
     setVenues,
     setSearchQuery,
+    selectedSport,
+    setSelectedSport,
+    selectedLocation,
+    setSelectedLocation,
     addVenue,
     updateVenue,
     deleteVenue,

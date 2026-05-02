@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import './App.css';
-import { VenueProvider } from './context/VenueContext';
+import { VenueProvider, VenueContext } from './context/VenueContext';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import OfferBanner from './components/OfferBanner';
@@ -14,9 +14,17 @@ import BookingPage from './components/BookingPage';
 import BookingDetailsPage from './components/BookingDetailsPage';
 import { apiUrl, getAuthHeaders } from './apiConfig';
 
+function HeaderWithContext() {
+  const { selectedLocation, setSelectedLocation } = useContext(VenueContext);
+  return <Header location={selectedLocation || 'All Cities'} setLocation={setSelectedLocation} />;
+}
+
+function SportsSelectorWithContext() {
+  const { selectedSport, setSelectedSport } = useContext(VenueContext);
+  return <SportsSelector selectedSport={selectedSport} setSelectedSport={setSelectedSport} />;
+}
+
 function App() {
-  const [selectedSport, setSelectedSport] = useState('cricket');
-  const [selectedLocation, setSelectedLocation] = useState('Lucknow');
   const [path, setPath] = useState(window.location.pathname);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(isAdminAuthenticated);
 
@@ -120,10 +128,10 @@ function App() {
           />
         ) : (
           <>
-            <Header location={selectedLocation} setLocation={setSelectedLocation} />
+            <HeaderWithContext />
             <SearchBar />
             <OfferBanner />
-            <SportsSelector selectedSport={selectedSport} setSelectedSport={setSelectedSport} />
+            <SportsSelectorWithContext />
             <FeaturedVenues onBookVenue={openBookingPage} />
             <VenuesList onBookVenue={openBookingPage} />
             <BottomNavigation />

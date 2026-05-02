@@ -30,7 +30,7 @@ function SportsSelector({ selectedSport, setSelectedSport }) {
           <button
             key={sport.id}
             className={`sport-btn ${selectedSport === sport.id ? 'active' : ''}`}
-            onClick={() => setSelectedSport(sport.id)}
+            onClick={() => setSelectedSport(selectedSport === sport.id ? '' : sport.id)}
           >
             <div className="sport-icon">
               {sport.icon}
@@ -44,4 +44,3 @@ function SportsSelector({ selectedSport, setSelectedSport }) {
 }
 
 export default SportsSelector;
-

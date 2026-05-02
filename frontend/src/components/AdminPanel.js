@@ -33,6 +33,12 @@ function AdminPanel() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
+  const [toast, setToast] = useState('');
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 3000);
+  };
 
   const sportOptions = ['Cricket', 'Football', 'Pickleball'];
   const bookingStatuses = ['New', 'Confirmed', 'Cancelled'];
@@ -99,7 +105,7 @@ function AdminPanel() {
     e.preventDefault();
 
     if (!formData.name || !formData.location || !formData.price || !formData.rating) {
-      alert('Please fill in all required fields');
+      showToast('Please fill in all required fields');
       return;
     }
 
@@ -116,10 +122,10 @@ function AdminPanel() {
 
     if (editingId) {
       updateVenue(editingId, venuePayload);
-      alert('Venue updated successfully!');
+      showToast('Venue updated successfully!');
     } else {
       addVenue(venuePayload);
-      alert('Venue added successfully!');
+      showToast('Venue added successfully!');
     }
 
     resetForm();
@@ -146,7 +152,7 @@ function AdminPanel() {
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this venue?')) {
       deleteVenue(id);
-      alert('Venue deleted successfully!');
+      showToast('Venue deleted successfully!');
     }
   };
 
@@ -577,6 +583,18 @@ function AdminPanel() {
               ))}
             </div>
           )}
+        </div>
+      )}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: '24px', right: '24px',
+          background: '#22c55e', color: '#fff',
+          padding: '12px 20px', borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          fontSize: '14px', fontWeight: '500', zIndex: 9999,
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          {toast}
         </div>
       )}
     </div>

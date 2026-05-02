@@ -6,6 +6,7 @@ function venueFromRow($row) {
         'id' => (int) $row['id'],
         'name' => $row['name'],
         'location' => $row['location'],
+        'city' => $row['city'] ?? '',
         'description' => $row['description'] ?? '',
         'price' => (string) (0 + $row['price']),
         'rating' => (float) $row['rating'],
@@ -21,6 +22,7 @@ function venuePayload($input) {
     return [
         'name' => trim($input['name'] ?? ''),
         'location' => trim($input['location'] ?? ''),
+        'city' => trim($input['city'] ?? ''),
         'description' => trim($input['description'] ?? ''),
         'price' => (float) ($input['price'] ?? 0),
         'rating' => (float) ($input['rating'] ?? 0),
@@ -32,8 +34,18 @@ function venuePayload($input) {
     ];
 }
 
+
 $pdo = getDb();
+
+// Migrate: add city column if it doesn't exist
+try {
+    $pdo->exec("ALTER TABLE venues ADD COLUMN city VARCHAR(100) NOT NULL DEFAULT ''");
+} catch (PDOException $e) {
+    // Column already exists — ignore
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
+
 
 if ($method === 'GET') {
     $stmt = $pdo->query('SELECT * FROM venues ORDER BY id DESC');
@@ -48,8 +60,8 @@ if ($method === 'POST') {
     }
 
     $stmt = $pdo->prepare('
-        INSERT INTO venues (name, location, description, price, rating, sports, image, gallery, badge, is_featured)
-        VALUES (:name, :location, :description, :price, :rating, :sports, :image, :gallery, :badge, :is_featured)
+        INSERT INTO venues (name, location, city, description, price, rating, sports, image, gallery, badge, is_featured)
+        VALUES (:name, :location, :city, :description, :price, :rating, :sports, :image, :gallery, :badge, :is_featured)
     ');
     $stmt->execute($payload);
 
@@ -68,6 +80,7 @@ if ($method === 'PATCH') {
         UPDATE venues
         SET name = :name,
             location = :location,
+            city = :city,
             description = :description,
             price = :price,
             rating = :rating,

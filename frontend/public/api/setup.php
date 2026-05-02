@@ -22,6 +22,7 @@ $pdo->exec("
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         location TEXT NOT NULL,
+        city VARCHAR(100) NOT NULL DEFAULT '',
         description TEXT NULL,
         price DECIMAL(10,2) NOT NULL DEFAULT 0,
         rating DECIMAL(2,1) NOT NULL DEFAULT 0,
@@ -34,6 +35,13 @@ $pdo->exec("
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
+
+// Migrate existing tables that were created before city column was added
+try {
+    $pdo->exec("ALTER TABLE venues ADD COLUMN city VARCHAR(100) NOT NULL DEFAULT 'Lucknow'");
+} catch (PDOException $e) {
+    // Column already exists — ignore
+}
 
 $pdo->exec("
     CREATE TABLE IF NOT EXISTS bookings (
@@ -65,14 +73,15 @@ if ($adminCount === 0) {
 $venueCount = (int) $pdo->query('SELECT COUNT(*) FROM venues')->fetchColumn();
 if ($venueCount === 0) {
     $stmt = $pdo->prepare('
-        INSERT INTO venues (name, location, description, price, rating, sports, image, gallery, badge, is_featured)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO venues (name, location, city, description, price, rating, sports, image, gallery, badge, is_featured)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ');
 
     $starterVenues = [
         [
             'Ball N Goal',
             'Gate No. 1, MI Rustle Court, Sector 6, Gomti Nagar, Lucknow',
+            'Lucknow',
             'Multi-sport turf with cricket, football and pickleball slots.',
             1100,
             4.8,
@@ -85,6 +94,7 @@ if ($venueCount === 0) {
         [
             'Elite Sports Arena',
             'A-1/26, Viram Khand 1, Gomti Nagar, Lucknow',
+            'Lucknow',
             'Floodlit turf for evening football and box cricket bookings.',
             1100,
             4.8,
@@ -97,6 +107,7 @@ if ($venueCount === 0) {
         [
             'Players Town',
             'S-524 Vishal Khand, Gomti Nagar, Lucknow',
+            'Lucknow',
             'Compact neighborhood venue with fast booking availability.',
             1100,
             4.7,
@@ -115,11 +126,12 @@ if ($venueCount === 0) {
             $venue[2],
             $venue[3],
             $venue[4],
-            json_encode($venue[5]),
-            $venue[6],
-            json_encode($venue[7]),
-            $venue[8],
+            $venue[5],
+            json_encode($venue[6]),
+            $venue[7],
+            json_encode($venue[8]),
             $venue[9],
+            $venue[10],
         ]);
     }
 }
