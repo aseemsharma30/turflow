@@ -66,6 +66,18 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
+const parseJsonColumn = (value, fallback = []) => {
+  if (!value) return fallback;
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch {
+    // Plain comma-separated string (corrupt legacy data) — convert it
+    return value.split(',').map(s => s.trim()).filter(Boolean);
+  }
+};
+
 const venueFromRow = (row) => ({
   id: Number(row.id),
   name: row.name,
@@ -73,9 +85,9 @@ const venueFromRow = (row) => ({
   description: row.description || '',
   price: String(Number(row.price || 0)),
   rating: Number(row.rating || 0),
-  sports: JSON.parse(row.sports || '[]'),
+  sports: parseJsonColumn(row.sports),
   image: row.image || '',
-  gallery: JSON.parse(row.gallery || '[]'),
+  gallery: parseJsonColumn(row.gallery),
   badge: row.badge || '',
   isFeatured: Boolean(row.is_featured)
 });
