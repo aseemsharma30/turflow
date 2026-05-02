@@ -19,9 +19,7 @@ function Header({ location }) {
           </span>
         </div>
 
-        <button className="notification-btn">
-          <FiBell />
-        </button>
+
       </div>
     </header>
   );

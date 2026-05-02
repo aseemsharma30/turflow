@@ -8,6 +8,7 @@ function FeaturedVenues({ onBookVenue }) {
   const { venues } = useContext(VenueContext);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [liked, setLiked] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(null);
 
   const displayVenues = venues.filter(venue => venue.isFeatured).slice(0, 6);
 
@@ -17,21 +18,14 @@ function FeaturedVenues({ onBookVenue }) {
     }
   }, [currentIndex, displayVenues.length]);
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % displayVenues.length);
-  };
-
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + displayVenues.length) % displayVenues.length);
-  };
+  const handleNext = () => setCurrentIndex((prev) => (prev + 1) % displayVenues.length);
+  const handlePrev = () => setCurrentIndex((prev) => (prev - 1 + displayVenues.length) % displayVenues.length);
 
   if (displayVenues.length === 0) {
     return (
       <div className="featured-venues">
         <h3>Featured Venues</h3>
-        <div className="no-venues-message">
-          No venues available yet.
-        </div>
+        <div className="no-venues-message">No venues available yet.</div>
       </div>
     );
   }
@@ -49,12 +43,7 @@ function FeaturedVenues({ onBookVenue }) {
             )}
             <div className="venue-image">
               <img src={currentVenue.image} alt={currentVenue.name} />
-              <button
-                className="like-btn"
-                onClick={() => setLiked(!liked)}
-              >
-                <FiHeart fill={liked ? '#22c55e' : 'none'} />
-              </button>
+
             </div>
 
             <div className="venue-details">
@@ -65,9 +54,7 @@ function FeaturedVenues({ onBookVenue }) {
               )}
 
               <div className="venue-meta">
-                <div className="rating">
-                  <AiFillStar /> {currentVenue.rating}
-                </div>
+                <div className="rating"><AiFillStar /> {currentVenue.rating}</div>
                 <div className="price">₹{currentVenue.price}<span>/hr</span></div>
               </div>
 
@@ -79,17 +66,19 @@ function FeaturedVenues({ onBookVenue }) {
 
               <div className="venue-actions">
                 <button className="book-btn" onClick={() => onBookVenue(currentVenue.id)}>Book Now →</button>
-                <button className="gallery-btn">
-                  <FiImage /> {currentVenue.gallery.length > 0 ? `${currentVenue.gallery.length} Photos` : 'Gallery'}
+                <button
+                  className="gallery-btn"
+                  onClick={() => currentVenue.gallery.length > 0 && setGalleryIndex(0)}
+                  style={{ opacity: currentVenue.gallery.length > 0 ? 1 : 0.5, cursor: currentVenue.gallery.length > 0 ? 'pointer' : 'default' }}
+                >
+                  <FiImage /> {currentVenue.gallery.length > 0 ? `${currentVenue.gallery.length} Photos` : 'No Gallery'}
                 </button>
               </div>
             </div>
           </div>
 
           <div className="carousel-controls">
-            <button className="nav-btn prev" onClick={handlePrev}>
-              <FiChevronLeft />
-            </button>
+            <button className="nav-btn prev" onClick={handlePrev}><FiChevronLeft /></button>
             <div className="dots">
               {displayVenues.map((_, index) => (
                 <div
@@ -99,12 +88,40 @@ function FeaturedVenues({ onBookVenue }) {
                 />
               ))}
             </div>
-            <button className="nav-btn next" onClick={handleNext}>
-              <FiChevronRight />
-            </button>
+            <button className="nav-btn next" onClick={handleNext}><FiChevronRight /></button>
           </div>
         </div>
       </div>
+
+      {/* Gallery lightbox */}
+      {galleryIndex !== null && currentVenue.gallery.length > 0 && (
+        <div
+          onClick={() => setGalleryIndex(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}
+        >
+          <button
+            onClick={() => setGalleryIndex(null)}
+            style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: '50%', width: '36px', height: '36px', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >✕</button>
+          <img
+            src={currentVenue.gallery[galleryIndex]}
+            alt={`Gallery ${galleryIndex + 1}`}
+            onClick={e => e.stopPropagation()}
+            style={{ maxWidth: '92vw', maxHeight: '75vh', borderRadius: '12px', objectFit: 'contain' }}
+          />
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {currentVenue.gallery.map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                alt={`thumb ${i}`}
+                onClick={e => { e.stopPropagation(); setGalleryIndex(i); }}
+                style={{ width: '56px', height: '42px', objectFit: 'cover', borderRadius: '6px', cursor: 'pointer', border: i === galleryIndex ? '2px solid #22c55e' : '2px solid transparent', opacity: i === galleryIndex ? 1 : 0.6 }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

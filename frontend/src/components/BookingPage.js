@@ -4,12 +4,13 @@ import { AiFillStar } from 'react-icons/ai';
 import { VenueContext } from '../context/VenueContext';
 import './BookingPage.css';
 
-const timeSlots = [
-  '12:00 AM', '1:00 AM', '2:00 AM', '3:00 AM', '4:00 AM', '5:00 AM',
-  '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
-  '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
-  '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM', '10:00 PM', '11:00 PM'
-];
+const timeSlots = [];
+for (let hour = 0; hour < 24; hour++) {
+  const ampm = hour < 12 ? 'AM' : 'PM';
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  timeSlots.push(`${displayHour}:00 ${ampm}`);
+  timeSlots.push(`${displayHour}:30 ${ampm}`);
+}
 
 const durationOptions = [1, 2, 3, 4, 5, 6];
 
@@ -36,6 +37,7 @@ function BookingPage({ venueId, onBack, onContinue }) {
   ), []);
 
   const [selectedDate, setSelectedDate] = useState(dateOptions[0].value);
+  const [galleryIndex, setGalleryIndex] = useState(null);
   const [selectedTime, setSelectedTime] = useState('6:00 PM');
   const [duration, setDuration] = useState(1);
 
@@ -80,7 +82,7 @@ function BookingPage({ venueId, onBack, onContinue }) {
         <h2>Turf Photos</h2>
         <div className="booking-photo-grid">
           {photos.map((photo, index) => (
-            <div className="booking-photo" key={`${photo}-${index}`}>
+            <div className="booking-photo" key={`${photo}-${index}`} onClick={() => setGalleryIndex(index)} style={{cursor:'pointer'}}>
               <img src={photo} alt={`${venue.name} ${index + 1}`} />
               <span>{index + 1}/{photos.length}</span>
             </div>
@@ -168,6 +170,36 @@ function BookingPage({ venueId, onBack, onContinue }) {
       <button className="booking-submit" type="button" onClick={handleContinue}>
         Continue to Your Details
       </button>
+
+      {/* Gallery lightbox */}
+      {galleryIndex !== null && (
+        <div
+          onClick={() => setGalleryIndex(null)}
+          style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:'12px'}}
+        >
+          <button
+            onClick={() => setGalleryIndex(null)}
+            style={{position:'absolute',top:'16px',right:'16px',background:'rgba(255,255,255,0.15)',border:'none',color:'#fff',borderRadius:'50%',width:'36px',height:'36px',fontSize:'20px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}
+          >✕</button>
+          <img
+            src={photos[galleryIndex]}
+            alt={`${venue.name} ${galleryIndex + 1}`}
+            onClick={e => e.stopPropagation()}
+            style={{maxWidth:'92vw',maxHeight:'75vh',borderRadius:'12px',objectFit:'contain'}}
+          />
+          <div style={{display:'flex',gap:'8px',flexWrap:'wrap',justifyContent:'center'}}>
+            {photos.map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                alt={`thumb ${i}`}
+                onClick={e => { e.stopPropagation(); setGalleryIndex(i); }}
+                style={{width:'56px',height:'42px',objectFit:'cover',borderRadius:'6px',cursor:'pointer',border: i === galleryIndex ? '2px solid #22c55e' : '2px solid transparent',opacity: i === galleryIndex ? 1 : 0.6}}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
