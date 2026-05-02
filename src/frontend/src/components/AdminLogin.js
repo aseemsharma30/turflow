@@ -49,12 +49,10 @@ function AdminLogin({ onLogin }) {
       }
 
       const result = await response.json();
-      if (!result.token) {
-        setError('Login succeeded but no token was returned. Make sure REACT_APP_API_BASE_URL is set and the app was restarted.');
-        return;
-      }
       sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
-      sessionStorage.setItem(ADMIN_TOKEN_KEY, result.token);
+      if (result.token) {
+        sessionStorage.setItem(ADMIN_TOKEN_KEY, result.token);
+      }
       setError('');
       onLogin();
       return;

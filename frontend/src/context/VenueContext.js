@@ -1,55 +1,10 @@
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { apiUrl, getAuthHeaders } from '../apiConfig';
 
 export const VenueContext = createContext();
 
-const STORAGE_KEY = 'turflow_venues';
-const BOOKINGS_STORAGE_KEY = 'turflow_bookings';
 const VENUES_API_URL = apiUrl('/api/venues.php');
 const BOOKINGS_API_URL = apiUrl('/api/bookings.php');
-const DEFAULT_IMAGE = 'https://via.placeholder.com/800x500?text=TurFlow+Venue';
-
-const starterVenues = [
-  {
-    id: 1,
-    name: 'Ball N Goal',
-    location: 'Gate No. 1, MI Rustle Court, Sector 6, Gomti Nagar, Lucknow',
-    description: 'Multi-sport turf with cricket, football and pickleball slots.',
-    price: '1100',
-    rating: 4.8,
-    sports: ['Cricket', 'Football', 'Pickleball'],
-    image: 'https://images.unsplash.com/photo-1550881111-7cfde14b8073?auto=format&fit=crop&w=900&q=80',
-    gallery: [],
-    badge: 'NEW',
-    isFeatured: true
-  },
-  {
-    id: 2,
-    name: 'Elite Sports Arena',
-    location: 'A-1/26, Viram Khand 1, Gomti Nagar, Lucknow',
-    description: 'Floodlit turf for evening football and box cricket bookings.',
-    price: '1100',
-    rating: 4.8,
-    sports: ['Cricket', 'Football'],
-    image: 'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&w=900&q=80',
-    gallery: [],
-    badge: '',
-    isFeatured: true
-  },
-  {
-    id: 3,
-    name: 'Players Town',
-    location: 'S-524 Vishal Khand, Gomti Nagar, Lucknow',
-    description: 'Compact neighborhood venue with fast booking availability.',
-    price: '1100',
-    rating: 4.7,
-    sports: ['Cricket', 'Football'],
-    image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=900&q=80',
-    gallery: [],
-    badge: 'NEW',
-    isFeatured: true
-  }
-];
 
 const normalizeVenue = (venue) => ({
   ...venue,
@@ -57,298 +12,186 @@ const normalizeVenue = (venue) => ({
   price: String(venue.price || ''),
   rating: Number(venue.rating || 0),
   sports: Array.isArray(venue.sports) ? venue.sports : [],
-  image: venue.image || DEFAULT_IMAGE,
+  image: venue.image || '',
   gallery: Array.isArray(venue.gallery) ? venue.gallery : [],
   badge: venue.badge || '',
   isFeatured: venue.isFeatured ?? true
 });
 
-const loadVenues = () => {
-  try {
-    const savedVenues = localStorage.getItem(STORAGE_KEY);
-    if (savedVenues) {
-      return JSON.parse(savedVenues).map(normalizeVenue);
-    }
-  } catch (error) {
-    console.warn('Unable to load saved venues', error);
-  }
-
-  return starterVenues.map(normalizeVenue);
-};
-
-const normalizeBooking = (booking) => ({
-  ...booking,
-  id: booking.id || Date.now(),
-  status: booking.status || 'New',
-  createdAt: booking.createdAt || new Date().toISOString()
-});
-
-const loadBookings = () => {
-  try {
-    const savedBookings = localStorage.getItem(BOOKINGS_STORAGE_KEY);
-    if (savedBookings) {
-      return JSON.parse(savedBookings).map(normalizeBooking);
-    }
-  } catch (error) {
-    console.warn('Unable to load saved bookings', error);
-  }
-
-  return [];
-};
-
 export const VenueProvider = ({ children }) => {
-  const [venues, setVenues] = useState(loadVenues);
-  const [bookings, setBookings] = useState(loadBookings);
+  const [venues, setVenues] = useState([]);
+  const [bookings, setBookings] = useState([]);
+
+  // ─── Venues ────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    let isMounted = true;
-
-const loadServerVenues = async () => {
-       try {
-         const response = await fetch(VENUES_API_URL, {
-           credentials: 'include'
-         });
-         const contentType = response.headers.get('content-type') || '';
-         if (!response.ok || !contentType.includes('application/json')) return;
-
-         const serverVenues = await response.json();
-         if (isMounted && Array.isArray(serverVenues) && serverVenues.length > 0) {
-           setVenues(serverVenues.map(normalizeVenue));
-        }
-       } catch (error) {
-         console.warn('Using local venue storage fallback', error);
-       }
-     };
-
-    loadServerVenues();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadServerBookings = async () => {
+    const fetchVenues = async () => {
       try {
-        const response = await fetch(BOOKINGS_API_URL, {
-          credentials: 'include',
-          headers: getAuthHeaders()
-        });
-        const contentType = response.headers.get('content-type') || '';
-        if (!response.ok || !contentType.includes('application/json')) return;
-
-        const serverBookings = await response.json();
-        if (isMounted && Array.isArray(serverBookings)) {
-          setBookings(serverBookings.map(normalizeBooking));
+        const response = await fetch(VENUES_API_URL, { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          setVenues(data.map(normalizeVenue));
+        } else {
+          console.error('Failed to fetch venues');
         }
       } catch (error) {
-        console.warn('Using local booking storage fallback', error);
+        console.error('Error fetching venues:', error);
       }
     };
-
-    loadServerBookings();
-
-    return () => {
-      isMounted = false;
-    };
+    fetchVenues();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(venues));
-  }, [venues]);
-
-  useEffect(() => {
-    localStorage.setItem(BOOKINGS_STORAGE_KEY, JSON.stringify(bookings));
-  }, [bookings]);
-
-   const refreshVenues = async () => {
-     try {
-       const response = await fetch(VENUES_API_URL, {
-         credentials: 'include'
-       });
-       const contentType = response.headers.get('content-type') || '';
-       if (!response.ok || !contentType.includes('application/json')) return;
-
-       const serverVenues = await response.json();
-       if (Array.isArray(serverVenues) && serverVenues.length > 0) {
-         setVenues(serverVenues.map(normalizeVenue));
-       }
-     } catch (error) {
-       console.warn('Unable to refresh server venues', error);
-     }
-   };
-
-   const refreshBookings = async () => {
-     try {
-       const response = await fetch(BOOKINGS_API_URL, {
-         credentials: 'include',
-         headers: getAuthHeaders()
-       });
-       const contentType = response.headers.get('content-type') || '';
-       if (!response.ok || !contentType.includes('application/json')) return;
-
-       const serverBookings = await response.json();
-       if (Array.isArray(serverBookings)) {
-         setBookings(serverBookings.map(normalizeBooking));
-       }
-     } catch (error) {
-       console.warn('Unable to refresh server bookings', error);
-     }
-   };
-
-  const addVenue = async (venue) => {
-    const newVenue = normalizeVenue({
-      ...venue,
-      id: Math.max(...venues.map(v => v.id), 0) + 1
-    });
-    setVenues(prevVenues => [...prevVenues, newVenue]);
-
+  const addVenue = useCallback(async (venueData) => {
     try {
       const response = await fetch(VENUES_API_URL, {
         method: 'POST',
         credentials: 'include',
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newVenue)
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify(venueData)
       });
-      const contentType = response.headers.get('content-type') || '';
-      if (response.ok && contentType.includes('application/json')) {
-        const savedVenue = normalizeVenue(await response.json());
-        setVenues(prevVenues => prevVenues.map(item =>
-          item.id === newVenue.id ? savedVenue : item
-        ));
-        return savedVenue;
+      if (response.ok) {
+        const newVenue = await response.json();
+        setVenues((prev) => [normalizeVenue(newVenue), ...prev]);
+        return newVenue;
+      } else {
+        const err = await response.json().catch(() => ({}));
+        console.error('Failed to add venue:', err);
       }
     } catch (error) {
-      console.warn('Venue saved locally only', error);
+      console.error('Error adding venue:', error);
     }
+  }, []);
 
-    return newVenue;
-  };
-
-  const updateVenue = async (id, updatedVenue) => {
-    setVenues(prevVenues => prevVenues.map(venue =>
-      venue.id === id ? normalizeVenue({ ...venue, ...updatedVenue }) : venue
-    ));
-
+  const updateVenue = useCallback(async (id, venueData) => {
     try {
       const response = await fetch(VENUES_API_URL, {
         method: 'PATCH',
         credentials: 'include',
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ ...updatedVenue, id })
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ ...venueData, id })
       });
-      const contentType = response.headers.get('content-type') || '';
-      if (response.ok && contentType.includes('application/json')) {
-        const savedVenue = normalizeVenue(await response.json());
-        setVenues(prevVenues => prevVenues.map(venue =>
-          venue.id === id ? savedVenue : venue
-        ));
+      if (response.ok) {
+        const updated = await response.json();
+        setVenues((prev) =>
+          prev.map((v) => (v.id === id ? normalizeVenue(updated) : v))
+        );
+        return updated;
+      } else {
+        const err = await response.json().catch(() => ({}));
+        console.error('Failed to update venue:', err);
       }
     } catch (error) {
-      console.warn('Venue updated locally only', error);
+      console.error('Error updating venue:', error);
     }
-  };
+  }, []);
 
-  const deleteVenue = async (id) => {
-    setVenues(prevVenues => prevVenues.filter(venue => venue.id !== id));
-
+  const deleteVenue = useCallback(async (id) => {
     try {
-      await fetch(`${VENUES_API_URL}?id=${encodeURIComponent(id)}`, {
+      const response = await fetch(`${VENUES_API_URL}?id=${id}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: getAuthHeaders()
       });
+      if (response.ok) {
+        setVenues((prev) => prev.filter((v) => v.id !== id));
+      } else {
+        console.error('Failed to delete venue');
+      }
     } catch (error) {
-      console.warn('Venue deleted locally only', error);
+      console.error('Error deleting venue:', error);
     }
-  };
+  }, []);
 
-  const addBooking = async (booking) => {
-    const newBooking = normalizeBooking({
-      ...booking,
-      id: Date.now()
-    });
-    setBookings(prevBookings => [newBooking, ...prevBookings]);
+  // ─── Bookings ───────────────────────────────────────────────────────────────
 
+  const refreshBookings = useCallback(async () => {
+    try {
+      const response = await fetch(BOOKINGS_API_URL, {
+        credentials: 'include',
+        headers: getAuthHeaders()
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBookings(data);
+      } else {
+        console.error('Failed to fetch bookings');
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    }
+  }, []);
+
+  const addBooking = useCallback(async (bookingData) => {
     try {
       const response = await fetch(BOOKINGS_API_URL, {
         method: 'POST',
         credentials: 'include',
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newBooking)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData)
       });
-      const contentType = response.headers.get('content-type') || '';
-      if (response.ok && contentType.includes('application/json')) {
-        const savedBooking = normalizeBooking(await response.json());
-        setBookings(prevBookings => prevBookings.map(item =>
-          item.id === newBooking.id ? savedBooking : item
-        ));
-        return savedBooking;
+      if (response.ok) {
+        const newBooking = await response.json();
+        return newBooking;
+      } else {
+        const err = await response.json().catch(() => ({}));
+        console.error('Failed to add booking:', err);
       }
     } catch (error) {
-      console.warn('Booking saved locally only', error);
+      console.error('Error adding booking:', error);
     }
+  }, []);
 
-    return newBooking;
-  };
-
-  const updateBookingStatus = async (id, status) => {
-    setBookings(prevBookings => prevBookings.map(booking =>
-      booking.id === id ? { ...booking, status } : booking
-    ));
-
+  const updateBookingStatus = useCallback(async (id, status) => {
     try {
-      await fetch(BOOKINGS_API_URL, {
+      const response = await fetch(BOOKINGS_API_URL, {
         method: 'PATCH',
         credentials: 'include',
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ id, status })
       });
+      if (response.ok) {
+        setBookings((prev) =>
+          prev.map((b) => (b.id === id ? { ...b, status } : b))
+        );
+      } else {
+        console.error('Failed to update booking status');
+      }
     } catch (error) {
-      console.warn('Booking status updated locally only', error);
+      console.error('Error updating booking status:', error);
     }
-  };
+  }, []);
 
-  const deleteBooking = async (id) => {
-    setBookings(prevBookings => prevBookings.filter(booking => booking.id !== id));
-
+  const deleteBooking = useCallback(async (id) => {
     try {
-      await fetch(`${BOOKINGS_API_URL}?id=${encodeURIComponent(id)}`, {
+      const response = await fetch(`${BOOKINGS_API_URL}?id=${id}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: getAuthHeaders()
       });
+      if (response.ok) {
+        setBookings((prev) => prev.filter((b) => b.id !== id));
+      } else {
+        console.error('Failed to delete booking');
+      }
     } catch (error) {
-      console.warn('Booking deleted locally only', error);
+      console.error('Error deleting booking:', error);
     }
-  };
+  }, []);
 
-   const value = {
-     venues,
-     bookings,
-     addVenue,
-     updateVenue,
-     deleteVenue,
-     addBooking,
-     updateBookingStatus,
-     deleteBooking,
-     refreshVenues,
-     refreshBookings
-   };
+  const value = {
+    // Venues
+    venues,
+    setVenues,
+    addVenue,
+    updateVenue,
+    deleteVenue,
+    // Bookings
+    bookings,
+    addBooking,
+    refreshBookings,
+    updateBookingStatus,
+    deleteBooking
+  };
 
   return (
     <VenueContext.Provider value={value}>
