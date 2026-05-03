@@ -30,7 +30,9 @@ app.use(cors({
       'http://127.0.0.1:3000',
       'http://127.0.0.1:8000',
       'https://turflow.in',
-      'https://darkslategrey-crab-676999.hostingersite.com'
+      'http://turflow.in',
+      'https://darkslategrey-crab-676999.hostingersite.com',
+      'http://darkslategrey-crab-676999.hostingersite.com'
     ];
 
     // Allow requests with no origin (like mobile apps or curl requests)
