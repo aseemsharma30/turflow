@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { FiChevronLeft, FiChevronRight, FiHeart, FiImage } from 'react-icons/fi';
 import { AiFillStar } from 'react-icons/ai';
 import { VenueContext } from '../context/VenueContext';
@@ -9,20 +9,20 @@ function FeaturedVenues({ onBookVenue }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(null);
-  const touchStartX = React.useRef(null);
-  const mouseStartX = React.useRef(null);
-  const isDragging = React.useRef(false);
 
-  const displayVenues = venues.filter(venue => venue.isFeatured).slice(0, 6);
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+  const mouseStartX = useRef(null);
+  const isDragging = useRef(false);
+
+  const displayVenues = venues.filter(v => v.isFeatured).slice(0, 6);
 
   useEffect(() => {
-    if (currentIndex >= displayVenues.length) {
-      setCurrentIndex(0);
-    }
+    if (currentIndex >= displayVenues.length) setCurrentIndex(0);
   }, [currentIndex, displayVenues.length]);
 
-  const handleNext = () => setCurrentIndex((prev) => (prev + 1) % displayVenues.length);
-  const handlePrev = () => setCurrentIndex((prev) => (prev - 1 + displayVenues.length) % displayVenues.length);
+  const handleNext = () => setCurrentIndex(p => (p + 1) % displayVenues.length);
+  const handlePrev = () => setCurrentIndex(p => (p - 1 + displayVenues.length) % displayVenues.length);
 
   if (displayVenues.length === 0) {
     return (
@@ -35,38 +35,71 @@ function FeaturedVenues({ onBookVenue }) {
 
   const currentVenue = displayVenues[currentIndex];
 
+  // Touch handlers — track both X and Y to avoid hijacking vertical scroll
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = touchStartX.current - e.changedTouches[0].clientX;
+    const dy = touchStartY.current - e.changedTouches[0].clientY;
+    // Only slide if horizontal movement is dominant and significant
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      dx > 0 ? handleNext() : handlePrev();
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
+  // Mouse drag handlers
+  const handleMouseDown = (e) => {
+    mouseStartX.current = e.clientX;
+    isDragging.current = false;
+  };
+
+  const handleMouseMove = (e) => {
+    if (mouseStartX.current !== null && Math.abs(e.clientX - mouseStartX.current) > 5) {
+      isDragging.current = true;
+    }
+  };
+
+  const handleMouseUp = (e) => {
+    if (mouseStartX.current === null) return;
+    const diff = mouseStartX.current - e.clientX;
+    if (isDragging.current && Math.abs(diff) > 50) diff > 0 ? handleNext() : handlePrev();
+    mouseStartX.current = null;
+    isDragging.current = false;
+  };
+
+  const handleCardClick = () => {
+    if (!isDragging.current) onBookVenue(currentVenue.id);
+  };
+
   return (
     <div className="featured-venues">
       <h3>Featured Venues</h3>
       <div
         className="carousel-container"
-        onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
-        onTouchEnd={e => {
-          if (touchStartX.current === null) return;
-          const diff = touchStartX.current - e.changedTouches[0].clientX;
-          if (Math.abs(diff) > 50) diff > 0 ? handleNext() : handlePrev();
-          touchStartX.current = null;
-        }}
-        onMouseDown={e => { mouseStartX.current = e.clientX; isDragging.current = false; }}
-        onMouseMove={e => { if (mouseStartX.current !== null && Math.abs(e.clientX - mouseStartX.current) > 5) isDragging.current = true; }}
-        onMouseUp={e => {
-          if (mouseStartX.current === null) return;
-          const diff = mouseStartX.current - e.clientX;
-          if (isDragging.current && Math.abs(diff) > 50) diff > 0 ? handleNext() : handlePrev();
-          mouseStartX.current = null;
-          isDragging.current = false;
-        }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
         onMouseLeave={() => { mouseStartX.current = null; isDragging.current = false; }}
         style={{ cursor: 'grab', userSelect: 'none' }}
       >
         <div className="carousel">
-          <div className="venue-card">
-            {currentVenue.badge && (
-              <div className="badge">{currentVenue.badge}</div>
-            )}
+          <div className="venue-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
+            {currentVenue.badge && <div className="badge">{currentVenue.badge}</div>}
+
             <div className="venue-image">
-              <img src={currentVenue.image} alt={currentVenue.name} />
-              <button className="like-btn" onClick={() => setLiked(!liked)}>
+              <img src={currentVenue.image} alt={currentVenue.name} draggable={false} />
+              <button
+                className="like-btn"
+                onClick={e => { e.stopPropagation(); setLiked(!liked); }}
+              >
                 <FiHeart fill={liked ? '#22c55e' : 'none'} />
               </button>
             </div>
@@ -84,17 +117,28 @@ function FeaturedVenues({ onBookVenue }) {
               </div>
 
               <div className="sports-tags">
-                {currentVenue.sports.map((sport) => (
+                {currentVenue.sports.map(sport => (
                   <span key={sport} className="sport-tag">{sport}</span>
                 ))}
               </div>
 
               <div className="venue-actions">
-                <button className="book-btn" onClick={() => onBookVenue(currentVenue.id)}>Book Now →</button>
+                <button
+                  className="book-btn"
+                  onClick={e => { e.stopPropagation(); onBookVenue(currentVenue.id); }}
+                >
+                  Book Now →
+                </button>
                 <button
                   className="gallery-btn"
-                  onClick={() => currentVenue.gallery.length > 0 && setGalleryIndex(0)}
-                  style={{ opacity: currentVenue.gallery.length > 0 ? 1 : 0.5, cursor: currentVenue.gallery.length > 0 ? 'pointer' : 'default' }}
+                  onClick={e => {
+                    e.stopPropagation();
+                    if (currentVenue.gallery.length > 0) setGalleryIndex(0);
+                  }}
+                  style={{
+                    opacity: currentVenue.gallery.length > 0 ? 1 : 0.5,
+                    cursor: currentVenue.gallery.length > 0 ? 'pointer' : 'default'
+                  }}
                 >
                   <FiImage /> {currentVenue.gallery.length > 0 ? `${currentVenue.gallery.length} Photos` : 'No Gallery'}
                 </button>
@@ -103,17 +147,17 @@ function FeaturedVenues({ onBookVenue }) {
           </div>
 
           <div className="carousel-controls">
-            <button className="nav-btn prev" onClick={handlePrev}><FiChevronLeft /></button>
+            <button className="nav-btn prev" onClick={e => { e.stopPropagation(); handlePrev(); }}><FiChevronLeft /></button>
             <div className="dots">
               {displayVenues.map((_, index) => (
                 <div
                   key={index}
                   className={`dot ${index === currentIndex ? 'active' : ''}`}
-                  onClick={() => setCurrentIndex(index)}
+                  onClick={e => { e.stopPropagation(); setCurrentIndex(index); }}
                 />
               ))}
             </div>
-            <button className="nav-btn next" onClick={handleNext}><FiChevronRight /></button>
+            <button className="nav-btn next" onClick={e => { e.stopPropagation(); handleNext(); }}><FiChevronRight /></button>
           </div>
         </div>
       </div>
