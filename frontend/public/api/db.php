@@ -5,7 +5,7 @@ if (preg_match('/^http:\/\/localhost(:\d+)?$/', $origin)) {
     header("Access-Control-Allow-Origin: $origin");
     header("Access-Control-Allow-Credentials: true");
     header("Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS");
-    header("Access-Control-Allow-Headers: Content-Type");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
 }
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
@@ -59,6 +59,13 @@ function startSession() {
 function requireAdmin() {
     startSession();
     if (empty($_SESSION['turflow_admin'])) {
+        sendJson(['error' => 'Unauthorized'], 401);
+    }
+}
+
+function requireUser() {
+    startSession();
+    if (empty($_SESSION['turflow_user'])) {
         sendJson(['error' => 'Unauthorized'], 401);
     }
 }

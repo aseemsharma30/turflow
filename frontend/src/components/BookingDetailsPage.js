@@ -1,25 +1,23 @@
 import React, { useContext, useMemo, useState } from 'react';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiUser, FiLogIn } from 'react-icons/fi';
 import { VenueContext } from '../context/VenueContext';
+import { UserContext } from '../context/UserContext';
 import './BookingDetailsPage.css';
 
 const OWNER_WHATSAPP_NUMBER = '917355657353';
 
-function BookingDetailsPage({ bookingDetails, onBack }) {
+function BookingDetailsPage({ bookingDetails, onBack, onSignInClick }) {
   const { addBooking, venues } = useContext(VenueContext);
+  const { user, isAuthenticated, loading } = useContext(UserContext);
   const venue = venues.find(item => String(item.id) === String(bookingDetails?.venueId));
-  const [formData, setFormData] = useState({
-    customerName: '',
-    customerPhone: ''
-  });
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const total = Number(bookingDetails?.total || 0);
   const duration = Number(bookingDetails?.duration || 1);
 
   const summary = useMemo(() => {
     if (!venue || !bookingDetails) return null;
-
     return {
       venueName: venue.name,
       venueLocation: venue.location,
@@ -31,25 +29,18 @@ function BookingDetailsPage({ bookingDetails, onBack }) {
     };
   }, [bookingDetails, duration, total, venue]);
 
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const handleSubmit = async () => {
+    if (!isAuthenticated || !user) return;
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    const customerName = formData.customerName.trim();
-    const customerPhone = formData.customerPhone.trim();
+    const customerName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    const customerPhone = user.phone?.trim() || '';
 
     if (!customerName || !/^[0-9]{10}$/.test(customerPhone)) {
-      setError('Please enter your name and a valid 10-digit phone number.');
+      setError('Your profile is missing a valid name or phone number. Please update your profile.');
       return;
     }
 
+    setSubmitting(true);
     await addBooking({
       venueId: venue.id,
       venueName: venue.name,
@@ -67,6 +58,7 @@ function BookingDetailsPage({ bookingDetails, onBack }) {
     const whatsappUrl = `https://wa.me/${OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
     setError('');
+    setSubmitting(false);
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
@@ -99,45 +91,64 @@ function BookingDetailsPage({ bookingDetails, onBack }) {
         <strong>{summary.time} - ₹{summary.amount}</strong>
       </section>
 
-      <form className="customer-details-form" onSubmit={handleSubmit}>
-        <h2>Enter Your Details</h2>
+      {loading ? (
+        <div className="details-auth-loading">Checking your session...</div>
+      ) : isAuthenticated && user ? (
+        /* SIGNED IN: show user info and confirm button */
+        <div className="customer-details-form">
+          <h2>Booking As</h2>
 
-        <div className="customer-field">
-          <label htmlFor="customer-name">Your Name *</label>
-          <input
-            id="customer-name"
-            name="customerName"
-            type="text"
-            value={formData.customerName}
-            onChange={handleInputChange}
-            placeholder="e.g. Abhiraj Pant"
-            required
-          />
+          <div className="details-user-card">
+            <div className="details-user-avatar">
+              <FiUser size={22} />
+            </div>
+            <div className="details-user-info">
+              <strong>{`${user.firstName || ''} ${user.lastName || ''}`.trim()}</strong>
+              <span>{user.phone}</span>
+            </div>
+          </div>
+
+          {error && <div className="customer-error">{error}</div>}
+
+          <p>Tapping the button below will open WhatsApp with a pre-filled booking message.</p>
+
+          <button
+            className="details-submit"
+            type="button"
+            onClick={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? 'Processing...' : 'Open WhatsApp & Book Slot'}
+          </button>
         </div>
+      ) : (
+        /* NOT SIGNED IN: prompt to sign in */
+        <div className="customer-details-form">
+          <div className="details-auth-prompt">
+            <div className="details-auth-icon">
+              <FiLogIn size={28} />
+            </div>
+            <h2>Sign in to continue</h2>
+            <p>We'll use your saved name and phone number to confirm the booking — no need to type anything.</p>
 
-        <div className="customer-field">
-          <label htmlFor="customer-phone">Phone Number *</label>
-          <input
-            id="customer-phone"
-            name="customerPhone"
-            type="tel"
-            inputMode="numeric"
-            maxLength="10"
-            value={formData.customerPhone}
-            onChange={handleInputChange}
-            placeholder="10-digit mobile number"
-            required
-          />
+            <button
+              className="details-submit"
+              type="button"
+              onClick={() => onSignInClick && onSignInClick('signin')}
+            >
+              Sign In
+            </button>
+
+            <button
+              className="details-signup-link"
+              type="button"
+              onClick={() => onSignInClick && onSignInClick('signup')}
+            >
+              Don't have an account? Sign Up
+            </button>
+          </div>
         </div>
-
-        {error && <div className="customer-error">{error}</div>}
-
-        <p>Your details help us identify your booking. Tapping the button below will open WhatsApp with a pre-filled message.</p>
-
-        <button className="details-submit" type="submit">
-          Open WhatsApp & Book Slot
-        </button>
-      </form>
+      )}
     </main>
   );
 }

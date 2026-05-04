@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiCalendar, FiHome, FiUser } from 'react-icons/fi';
+import { UserContext } from '../context/UserContext';
 import './BottomNavigation.css';
 
 function ComingSoonOverlay({ label, onClose }) {
@@ -37,13 +38,18 @@ function ComingSoonOverlay({ label, onClose }) {
   );
 }
 
-function BottomNavigation() {
+function BottomNavigation({ onProfileClick, onBookingsClick }) {
+  const { isAuthenticated } = React.useContext(UserContext);
   const [activeTab, setActiveTab] = React.useState('home');
   const [comingSoon, setComingSoon] = React.useState(null);
 
   const handleTabClick = (tab) => {
-    if (tab === 'bookings' || tab === 'profile') {
-      setComingSoon(tab === 'bookings' ? 'Bookings' : 'Profile');
+    if (tab === 'bookings') {
+      onBookingsClick();
+      return;
+    }
+    if (tab === 'profile') {
+      onProfileClick(isAuthenticated);
       return;
     }
     setActiveTab(tab);

@@ -8,3 +8,10 @@ export const getAuthHeaders = () => {
   const token = getAdminToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
+
+export const getUserToken = () => localStorage.getItem('userToken');
+
+export const getUserAuthHeaders = () => {
+  const token = getUserToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};

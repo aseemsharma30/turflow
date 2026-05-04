@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import './App.css';
 import { VenueProvider, VenueContext } from './context/VenueContext';
+import { UserProvider, UserContext } from './context/UserContext';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import OfferBanner from './components/OfferBanner';
@@ -12,6 +13,10 @@ import AdminPanel from './components/AdminPanel';
 import AdminLogin, { clearAdminSession, isAdminAuthenticated } from './components/AdminLogin';
 import BookingPage from './components/BookingPage';
 import BookingDetailsPage from './components/BookingDetailsPage';
+import Bookings from './components/Bookings';
+import SignIn from './components/SignIn';
+import SignUp from './components/SignUp';
+import Profile from './components/Profile';
 import { apiUrl } from './apiConfig';
 
 
@@ -42,6 +47,8 @@ function HomeContent({ onBookVenue }) {
 function App() {
   const [path, setPath] = useState(window.location.pathname);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(isAdminAuthenticated);
+  const [authModal, setAuthModal] = useState(null); // 'signin', 'signup', 'profile'
+  const [showBookings, setShowBookings] = useState(false);
 
   useEffect(() => {
     const handleRouteChange = () => setPath(window.location.pathname);
@@ -100,58 +107,84 @@ function App() {
   } : null;
 
   return (
-    <VenueProvider>
-      <div className={`app ${isAdminRoute || isBookingRoute || isBookingDetailsRoute ? 'admin-app' : ''}`}>
-        {isAdminRoute ? (
-          isAdminLoggedIn ? (
-            <>
-              <div className="admin-header-bar">
-                <div className="admin-header-content">
-                  <span style={{fontFamily:'"Arial Black",Impact,sans-serif',fontStyle:'italic',fontWeight:900,fontSize:'28px',letterSpacing:'-0.5px',lineHeight:1,userSelect:'none'}}>
-                    <span style={{color:'#fff'}}>Tur</span><span style={{color:'#20c05c'}}>Flow</span>
-                  </span>
-                  <div className="admin-header-actions">
-                    <button
-                      className="back-to-home-btn"
-                      onClick={goHome}
-                    >
-                      Back to Home
-                    </button>
-                    <button
-                      className="logout-btn"
-                      onClick={handleAdminLogout}
-                    >
-                      Logout
-                    </button>
+    <UserProvider>
+      <VenueProvider>
+        <div className={`app ${isAdminRoute || isBookingRoute || isBookingDetailsRoute ? 'admin-app' : ''}`}>
+          {isAdminRoute ? (
+            isAdminLoggedIn ? (
+              <>
+                <div className="admin-header-bar">
+                  <div className="admin-header-content">
+                    <span style={{fontFamily:'"Arial Black",Impact,sans-serif',fontStyle:'italic',fontWeight:900,fontSize:'28px',letterSpacing:'-0.5px',lineHeight:1,userSelect:'none'}}>
+                      <span style={{color:'#fff'}}>Tur</span><span style={{color:'#20c05c'}}>Flow</span>
+                    </span>
+                    <div className="admin-header-actions">
+                      <button
+                        className="back-to-home-btn"
+                        onClick={goHome}
+                      >
+                        Back to Home
+                      </button>
+                      <button
+                        className="logout-btn"
+                        onClick={handleAdminLogout}
+                      >
+                        Logout
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <AdminPanel />
-            </>
+                <AdminPanel />
+              </>
+            ) : (
+              <AdminLogin onLogin={() => setIsAdminLoggedIn(true)} />
+            )
+          ) : isBookingDetailsRoute ? (
+            <BookingDetailsPage
+              bookingDetails={bookingDetails}
+              onBack={() => goBackToBooking(bookingVenueId)}
+              onSignInClick={(mode) => setAuthModal(mode || 'signin')}
+            />
+          ) : isBookingRoute ? (
+            <BookingPage
+              venueId={bookingVenueId}
+              onBack={goHome}
+              onContinue={openBookingDetailsPage}
+            />
+          ) : showBookings ? (
+            <Bookings
+              onSignInClick={() => setAuthModal('signin')}
+              onBack={() => setShowBookings(false)}
+            />
           ) : (
-            <AdminLogin onLogin={() => setIsAdminLoggedIn(true)} />
-          )
-        ) : isBookingDetailsRoute ? (
-          <BookingDetailsPage
-            bookingDetails={bookingDetails}
-            onBack={() => goBackToBooking(bookingVenueId)}
-          />
-        ) : isBookingRoute ? (
-          <BookingPage
-            venueId={bookingVenueId}
-            onBack={goHome}
-            onContinue={openBookingDetailsPage}
-          />
-        ) : (
-          <>
-            <HeaderWithContext />
-            <SearchBar />
-            <HomeContent onBookVenue={openBookingPage} />
-            <BottomNavigation />
-          </>
-        )}
-      </div>
-    </VenueProvider>
+            <>
+              <HeaderWithContext />
+              <SearchBar />
+              <HomeContent onBookVenue={openBookingPage} />
+              <BottomNavigation
+                onProfileClick={(isAuth) => setAuthModal(isAuth ? 'profile' : 'signin')}
+                onBookingsClick={() => setShowBookings(true)}
+              />
+            </>
+          )}
+          {authModal === 'signin' && (
+            <SignIn
+              onSwitchToSignup={() => setAuthModal('signup')}
+              onClose={() => setAuthModal(null)}
+            />
+          )}
+          {authModal === 'signup' && (
+            <SignUp
+              onSwitchToSignin={() => setAuthModal('signin')}
+              onClose={() => setAuthModal(null)}
+            />
+          )}
+          {authModal === 'profile' && (
+            <Profile onClose={() => setAuthModal(null)} />
+          )}
+        </div>
+      </VenueProvider>
+    </UserProvider>
   );
 }
 
