@@ -9,6 +9,7 @@ function FeaturedVenues({ onBookVenue }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(null);
+  const touchStartX = React.useRef(null);
 
   const displayVenues = venues.filter(venue => venue.isFeatured).slice(0, 6);
 
@@ -35,7 +36,18 @@ function FeaturedVenues({ onBookVenue }) {
   return (
     <div className="featured-venues">
       <h3>Featured Venues</h3>
-      <div className="carousel-container">
+      <div
+        className="carousel-container"
+        onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
+        onTouchEnd={e => {
+          if (touchStartX.current === null) return;
+          const diff = touchStartX.current - e.changedTouches[0].clientX;
+          if (Math.abs(diff) > 50) {
+            diff > 0 ? handleNext() : handlePrev();
+          }
+          touchStartX.current = null;
+        }}
+      >
         <div className="carousel">
           <div className="venue-card">
             {currentVenue.badge && (
@@ -43,7 +55,9 @@ function FeaturedVenues({ onBookVenue }) {
             )}
             <div className="venue-image">
               <img src={currentVenue.image} alt={currentVenue.name} />
-
+              <button className="like-btn" onClick={() => setLiked(!liked)}>
+                <FiHeart fill={liked ? '#22c55e' : 'none'} />
+              </button>
             </div>
 
             <div className="venue-details">

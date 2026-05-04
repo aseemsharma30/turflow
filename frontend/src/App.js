@@ -25,6 +25,18 @@ function SportsSelectorWithContext() {
   return <SportsSelector selectedSport={selectedSport} setSelectedSport={setSelectedSport} />;
 }
 
+
+function HomeContent({ onBookVenue }) {
+  const { searchQuery } = useContext(VenueContext);
+  const isSearching = searchQuery && searchQuery.trim().length > 0;
+  return (
+    <>
+      {!isSearching && <FeaturedVenues onBookVenue={onBookVenue} />}
+      <VenuesList onBookVenue={onBookVenue} />
+    </>
+  );
+}
+
 function App() {
   const [path, setPath] = useState(window.location.pathname);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(isAdminAuthenticated);
@@ -134,8 +146,7 @@ function App() {
             <SearchBar />
             <OfferBanner />
             <SportsSelectorWithContext />
-            <FeaturedVenues onBookVenue={openBookingPage} />
-            <VenuesList onBookVenue={openBookingPage} />
+            <HomeContent onBookVenue={openBookingPage} />
             <BottomNavigation />
           </>
         )}

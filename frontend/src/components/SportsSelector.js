@@ -1,6 +1,6 @@
 import React from 'react';
-import { GiCricketBat, GiPingPongBat } from 'react-icons/gi';
-import { FaFootballBall } from 'react-icons/fa';
+import { GiCricketBat } from 'react-icons/gi';
+import { MdSportsSoccer } from 'react-icons/md';
 import './SportsSelector.css';
 
 function SportsSelector({ selectedSport, setSelectedSport }) {
@@ -13,12 +13,12 @@ function SportsSelector({ selectedSport, setSelectedSport }) {
     {
       id: 'football',
       name: 'Football',
-      icon: <FaFootballBall />
+      icon: <MdSportsSoccer />
     },
     {
       id: 'pickleball',
       name: 'Pickleball',
-      icon: <GiPingPongBat />
+      icon: <GiCricketBat /> // Using cricket icon as placeholder
     }
   ];
 
