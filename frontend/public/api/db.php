@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-require_once __DIR__ . '/local-config.php';
+require_once __DIR__ . '/config.php';
 
 function getDb() {
     static $pdo = null;
