@@ -6,4 +6,4 @@ define('DB_PASS', 'Admin@Yash@123');
 
 define('ADMIN_INITIAL_USERNAME', 'admin');
 define('ADMIN_INITIAL_PASSWORD', 'Admin@Yash@123');
-define('WHATSAPP_OWNER_NUMBER', '919821357889');
+define('WHATSAPP_OWNER_NUMBER', '917355657353');

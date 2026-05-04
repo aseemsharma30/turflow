@@ -3,7 +3,7 @@ import { FiArrowLeft } from 'react-icons/fi';
 import { VenueContext } from '../context/VenueContext';
 import './BookingDetailsPage.css';
 
-const OWNER_WHATSAPP_NUMBER = '919821357889';
+const OWNER_WHATSAPP_NUMBER = '917355657353';
 
 function BookingDetailsPage({ bookingDetails, onBack }) {
   const { addBooking, venues } = useContext(VenueContext);

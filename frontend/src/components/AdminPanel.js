@@ -47,7 +47,7 @@ function AdminPanel() {
   const filteredBookings = bookingFilter === 'All'
     ? bookings
     : bookings.filter(booking => booking.status === bookingFilter);
-  const totalRevenue = bookings.reduce((total, booking) => total + Number(booking.amount || 0), 0);
+  const totalRevenue = bookings.filter(b => b.status === 'Confirmed').reduce((total, booking) => total + Number(booking.amount || 0), 0);
   const totalPendingBookings = bookings.filter(booking => booking.status === 'New').length;
 
   const handleInputChange = (e) => {
@@ -169,7 +169,7 @@ function AdminPanel() {
   );
 
   const getBookingWhatsappUrl = (booking) => (
-    `https://wa.me/919821357889?text=${encodeURIComponent(getBookingMessage(booking))}`
+    `https://wa.me/917355657353?text=${encodeURIComponent(getBookingMessage(booking))}`
   );
 
   return (
