@@ -110,7 +110,7 @@ function BookingDetailsPage({ bookingDetails, onBack }) {
             type="text"
             value={formData.customerName}
             onChange={handleInputChange}
-            placeholder="e.g. Akash Singh"
+            placeholder="e.g. Abhiraj Pant"
             required
           />
         </div>
