@@ -10,6 +10,8 @@ function FeaturedVenues({ onBookVenue }) {
   const [liked, setLiked] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(null);
   const touchStartX = React.useRef(null);
+  const mouseStartX = React.useRef(null);
+  const isDragging = React.useRef(false);
 
   const displayVenues = venues.filter(venue => venue.isFeatured).slice(0, 6);
 
@@ -42,11 +44,20 @@ function FeaturedVenues({ onBookVenue }) {
         onTouchEnd={e => {
           if (touchStartX.current === null) return;
           const diff = touchStartX.current - e.changedTouches[0].clientX;
-          if (Math.abs(diff) > 50) {
-            diff > 0 ? handleNext() : handlePrev();
-          }
+          if (Math.abs(diff) > 50) diff > 0 ? handleNext() : handlePrev();
           touchStartX.current = null;
         }}
+        onMouseDown={e => { mouseStartX.current = e.clientX; isDragging.current = false; }}
+        onMouseMove={e => { if (mouseStartX.current !== null && Math.abs(e.clientX - mouseStartX.current) > 5) isDragging.current = true; }}
+        onMouseUp={e => {
+          if (mouseStartX.current === null) return;
+          const diff = mouseStartX.current - e.clientX;
+          if (isDragging.current && Math.abs(diff) > 50) diff > 0 ? handleNext() : handlePrev();
+          mouseStartX.current = null;
+          isDragging.current = false;
+        }}
+        onMouseLeave={() => { mouseStartX.current = null; isDragging.current = false; }}
+        style={{ cursor: 'grab', userSelect: 'none' }}
       >
         <div className="carousel">
           <div className="venue-card">
