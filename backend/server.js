@@ -1,6 +1,8 @@
 import cors from 'cors';
 import crypto from 'node:crypto';
 import express from 'express';
+import https from 'node:https';
+import fs from 'node:fs';
 import mysql from 'mysql2/promise';
 
 const app = express();
@@ -29,6 +31,7 @@ app.use(cors({
       'http://localhost:8000',
       'http://127.0.0.1:3000',
       'http://127.0.0.1:8000',
+      'https://127.0.0.1:8000',
       'https://turflow.in',
       'http://turflow.in',
       'https://darkslategrey-crab-676999.hostingersite.com',
@@ -395,6 +398,56 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
-app.listen(port, () => {
-  console.log(`TurFlow local backend running at http://localhost:${port}`);
-});
+// Load SSL certificates - try production paths first, fallback to self-signed
+let sslOptions = null;
+let useHttps = false;
+
+// Set USE_HTTPS=false in your local .env to force HTTP for local development
+if (process.env.USE_HTTPS === 'false') {
+  console.log('USE_HTTPS=false — running HTTP only');
+} else {
+
+try {
+  // Try production Let's Encrypt paths (Hostinger)
+  const keyPath = process.env.SSL_KEY_PATH || '/etc/letsencrypt/live/turflow.in/privkey.pem';
+  const certPath = process.env.SSL_CERT_PATH || '/etc/letsencrypt/live/turflow.in/fullchain.pem';
+
+  if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+    sslOptions = {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath)
+    };
+    useHttps = true;
+  }
+} catch (err) {
+  console.log('Could not load production certificates:', err.message);
+}
+
+// Fallback to self-signed certificates for development
+if (!sslOptions) {
+  try {
+    if (fs.existsSync('./key.pem') && fs.existsSync('./cert.pem')) {
+      sslOptions = {
+        key: fs.readFileSync('./key.pem'),
+        cert: fs.readFileSync('./cert.pem')
+      };
+      useHttps = true;
+    }
+  } catch (err) {
+    console.log('Could not load self-signed certificates:', err.message);
+  }
+}
+
+}
+
+if (useHttps && sslOptions) {
+  https.createServer(sslOptions, app)
+    .listen(port, () => {
+      console.log(`TurFlow backend running at https://localhost:${port}`);
+    });
+} else {
+  // Fallback to HTTP if no certificates available
+  app.listen(port, () => {
+    console.log(`TurFlow backend running at http://localhost:${port}`);
+  });
+}

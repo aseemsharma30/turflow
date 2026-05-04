@@ -4,7 +4,6 @@ import { apiUrl } from '../apiConfig';
 import './AdminLogin.css';
 
 const ADMIN_SESSION_KEY = 'turflow_admin_authenticated';
-const ADMIN_TOKEN_KEY = 'turflow_admin_token';
 
 export const isAdminAuthenticated = () => (
   sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true'
@@ -12,7 +11,6 @@ export const isAdminAuthenticated = () => (
 
 export const clearAdminSession = () => {
   sessionStorage.removeItem(ADMIN_SESSION_KEY);
-  sessionStorage.removeItem(ADMIN_TOKEN_KEY);
 };
 
 function AdminLogin({ onLogin }) {
@@ -49,15 +47,13 @@ function AdminLogin({ onLogin }) {
       }
 
       const result = await response.json();
-      if (!result.token) {
-        setError('Login succeeded but no token was returned. Make sure REACT_APP_API_BASE_URL is set and the app was restarted.');
+      if (!result.success) {
+        setError(result.error || 'Login failed.');
         return;
       }
       sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
-      sessionStorage.setItem(ADMIN_TOKEN_KEY, result.token);
       setError('');
       onLogin();
-      return;
     } catch (error) {
       setError('Unable to reach admin login. Check the PHP API setup.');
     }

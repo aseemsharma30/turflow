@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
-import { apiUrl, getAuthHeaders } from '../apiConfig';
+import { apiUrl } from '../apiConfig';
 
 export const VenueContext = createContext();
 
@@ -56,7 +56,7 @@ export const VenueProvider = ({ children }) => {
       const response = await fetch(VENUES_API_URL, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(venueData)
       });
       if (response.ok) {
@@ -77,7 +77,7 @@ export const VenueProvider = ({ children }) => {
       const response = await fetch(VENUES_API_URL, {
         method: 'PATCH',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...venueData, id })
       });
       if (response.ok) {
@@ -100,7 +100,6 @@ export const VenueProvider = ({ children }) => {
       const response = await fetch(`${VENUES_API_URL}?id=${id}`, {
         method: 'DELETE',
         credentials: 'include',
-        headers: getAuthHeaders()
       });
       if (response.ok) {
         setVenues((prev) => prev.filter((v) => v.id !== id));
@@ -118,7 +117,6 @@ export const VenueProvider = ({ children }) => {
     try {
       const response = await fetch(BOOKINGS_API_URL, {
         credentials: 'include',
-        headers: getAuthHeaders()
       });
       if (response.ok) {
         const data = await response.json();
@@ -156,7 +154,7 @@ export const VenueProvider = ({ children }) => {
       const response = await fetch(BOOKINGS_API_URL, {
         method: 'PATCH',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status })
       });
       if (response.ok) {
@@ -176,7 +174,6 @@ export const VenueProvider = ({ children }) => {
       const response = await fetch(`${BOOKINGS_API_URL}?id=${id}`, {
         method: 'DELETE',
         credentials: 'include',
-        headers: getAuthHeaders()
       });
       if (response.ok) {
         setBookings((prev) => prev.filter((b) => b.id !== id));

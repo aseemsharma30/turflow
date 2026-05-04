@@ -12,7 +12,7 @@ import AdminPanel from './components/AdminPanel';
 import AdminLogin, { clearAdminSession, isAdminAuthenticated } from './components/AdminLogin';
 import BookingPage from './components/BookingPage';
 import BookingDetailsPage from './components/BookingDetailsPage';
-import { apiUrl, getAuthHeaders } from './apiConfig';
+import { apiUrl } from './apiConfig';
 
 
 function HeaderWithContext() {
@@ -66,7 +66,6 @@ function App() {
     fetch(apiUrl('/api/admin-logout.php'), {
       method: 'POST',
       credentials: 'include',
-      headers: getAuthHeaders()
     }).catch(() => {});
     clearAdminSession();
     setIsAdminLoggedIn(false);

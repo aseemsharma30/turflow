@@ -21,7 +21,7 @@ if (!$admin || !password_verify($password, $admin['password_hash'])) {
     sendJson(['error' => 'Invalid admin username or password'], 401);
 }
 
-session_start();
+startSession();
 $_SESSION['turflow_admin'] = [
     'id' => $admin['id'],
     'username' => $admin['username']

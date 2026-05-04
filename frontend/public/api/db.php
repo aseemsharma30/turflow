@@ -30,8 +30,21 @@ function getJsonInput() {
     return is_array($input) ? $input : [];
 }
 
+function startSession() {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_set_cookie_params([
+            'lifetime' => 86400,
+            'path'     => '/',
+            'secure'   => isset($_SERVER['HTTPS']),
+            'httponly' => true,
+            'samesite' => 'None',
+        ]);
+        session_start();
+    }
+}
+
 function requireAdmin() {
-    session_start();
+    startSession();
     if (empty($_SESSION['turflow_admin'])) {
         sendJson(['error' => 'Unauthorized'], 401);
     }
