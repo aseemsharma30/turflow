@@ -31,6 +31,8 @@ function HomeContent({ onBookVenue }) {
   const isSearching = searchQuery && searchQuery.trim().length > 0;
   return (
     <>
+      {!isSearching && <OfferBanner />}
+      {!isSearching && <SportsSelectorWithContext />}
       {!isSearching && <FeaturedVenues onBookVenue={onBookVenue} />}
       <VenuesList onBookVenue={onBookVenue} />
     </>
@@ -144,8 +146,6 @@ function App() {
           <>
             <HeaderWithContext />
             <SearchBar />
-            <OfferBanner />
-            <SportsSelectorWithContext />
             <HomeContent onBookVenue={openBookingPage} />
             <BottomNavigation />
           </>

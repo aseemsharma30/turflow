@@ -190,6 +190,7 @@ export const VenueProvider = ({ children }) => {
     venues: filteredVenues,
     allVenues: venues,
     setVenues,
+    searchQuery,
     setSearchQuery,
     selectedSport,
     setSelectedSport,
